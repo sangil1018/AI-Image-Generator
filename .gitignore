@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+env/
+
+# Distribution / Build
+dist/
+build/
+
+# Logs & Debug
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# Local Config (Optional: Uncomment if you don't want to track config)
+# config.json
+
+# Model weights (if downloaded locally in project)
+models/
+*.safetensors
+*.ckpt

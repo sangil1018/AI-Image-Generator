@@ -1,0 +1,27 @@
+# Torch & Acceleration
+# IMPORTANT: PyTorch is excluded here to prevent overwriting with CPU version. 
+# It is handled explicitly in setup_env.bat or manually.
+# torch
+# torchvision
+# accelerate
+
+# Core AI & Diffusers
+git+https://github.com/huggingface/diffusers
+transformers
+safetensors
+peft
+sdnq
+
+# App & UI
+gradio
+gradio_client
+fastapi
+uvicorn
+
+# Utilities
+scipy
+numpy
+Pillow
+
+# Build Tools
+pyinstaller
