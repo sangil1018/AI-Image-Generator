@@ -3,33 +3,46 @@ chcp 65001 > nul
 setlocal
 cd /d "%~dp0"
 
-echo [Z-Image-Turbo] Python 가상 환경 설정 스크립트입니다.
+echo DEBUG: Script start
+
+echo [Z-Image-Turbo] Python Virtual Environment Setup Script.
 echo.
 
 REM Check for Python
+echo DEBUG: Checking Python version
 python --version
+echo DEBUG: Python version check done. errorlevel is %errorlevel%
 if %errorlevel% neq 0 (
-    echo [ERROR] Python을 찾을 수 없습니다.
+    echo [ERROR] Python not found.
     pause
     exit /b 1
 )
+echo DEBUG: Python check passed.
 
 REM Create venv if not exists
-if not exist "venv" (
-    echo [INFO] 가상 환경(venv)을 생성합니다...
-    python -m venv venv
-)
+echo DEBUG: Checking for venv directory
+if not exist "venv" goto CREATE_VENV
+goto VENV_EXISTS
+
+:CREATE_VENV
+echo [INFO] Creating virtual environment (venv)...
+python -m venv venv
+:VENV_EXISTS
+echo DEBUG: venv check passed.
 
 REM Activate venv
 call venv\Scripts\activate.bat
 
 REM Check if torch is already installed
+echo DEBUG: Checking for torch
 pip show torch >nul 2>&1
+echo DEBUG: torch check done. errorlevel is %errorlevel%
 if %errorlevel% equ 0 goto :TORCH_INSTALLED
+echo DEBUG: torch not found.
 
 REM Torch NOT installed, try installing
-echo [INFO] PyTorch가 감지되지 않았습니다. 기본 CUDA 버전(12.8)을 설치합니다...
-echo [WARNING] RTX 5090 사용자는 설치 실패 시 Readme를 참조하여 Nightly 버전을 수동 설치하세요.
+echo [INFO] PyTorch not detected. Installing default CUDA version (12.8)...
+echo [WARNING] RTX 5090 users, if installation fails, please refer to the Readme and install the Nightly version manually.
 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 if %errorlevel% neq 0 goto :TORCH_INSTALL_FAILED
@@ -38,24 +51,24 @@ pip install accelerate
 goto :INSTALL_DEPS
 
 :TORCH_INSTALL_FAILED
-echo [ERROR] PyTorch (Stable/cu128) 설치 실패.
-echo [INFO] RTX 50 시리즈라면 아래 명령어를 복사해 수동으로 설치하세요:
+echo [ERROR] PyTorch (Stable/cu128) installation failed.
+echo [INFO] For RTX 50 series, please copy and paste the command below to install manually:
 echo venv\Scripts\pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128
 echo.
-echo 당황하지 마시고, 일단 나머지 패키지 설치를 계속 진행합니다...
+echo Don't worry, we will continue installing the rest of the packages...
 goto :INSTALL_DEPS
 
 :TORCH_INSTALLED
-echo [INFO] PyTorch가 이미 설치되어 있습니다. (건너뜀)
+echo [INFO] PyTorch is already installed. (Skipping)
 
 :INSTALL_DEPS
 REM Install dependencies
-echo [INFO] 나머지 패키지 설치 시작...
+echo [INFO] Starting installation of remaining packages...
 pip install --upgrade pip
 pip install -r requirements.txt
 
 echo.
-echo [SUCCESS] 환경 설정이 완료되었습니다!
-echo [INFO] 'run.bat'을 실행하여 프로그램을 시작할 수 있습니다.
+echo [SUCCESS] Environment setup is complete!
+echo [INFO] You can start the program by running 'run.bat'.
 echo.
 pause
