@@ -12,9 +12,7 @@ safetensors
 peft
 sdnq
 
-# App & UI
-gradio
-gradio_client
+# App & API
 fastapi
 uvicorn
 

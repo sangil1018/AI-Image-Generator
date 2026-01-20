@@ -1,0 +1,7 @@
+TaskCanceledException: A task was canceled.
+Rethrow as AggregateException: One or more errors occurred. (A task was canceled.)
+System.Threading.Tasks.Task.ThrowIfExceptional (System.Boolean includeTaskCanceledExceptions) (at <bed9669261d44da0a59448ecde2b1a5c>:0)
+System.Threading.Tasks.Task`1[TResult].GetResultCore (System.Boolean waitCompletionNotification) (at <bed9669261d44da0a59448ecde2b1a5c>:0)
+System.Threading.Tasks.Task`1[TResult].get_Result () (at <bed9669261d44da0a59448ecde2b1a5c>:0)
+PythonServerManager+<GenerateImageCoroutine>d__30.MoveNext () (at Assets/Scripts/PythonServerManager.cs:320)
+UnityEngine.SetupCoroutine.InvokeMoveNext (System.Collections.IEnumerator enumerator, System.IntPtr returnValueAddress) (at <038ae34513ab4db49caf29025be8f045>:0)

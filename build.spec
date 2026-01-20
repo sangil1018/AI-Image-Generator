@@ -3,16 +3,18 @@ from PyInstaller.utils.hooks import collect_data_files, collect_submodules
 
 block_cipher = None
 
-# Collect all Gradio data files (frontend assets)
-gradio_datas = collect_data_files('gradio')
-gradio_client_datas = collect_data_files('gradio_client')
+# --- Add custom data files ---
+# ('source_path_on_disk', 'destination_path_in_package')
+custom_datas = [
+]
 
 # Collect hidden imports
 hiddenimports = [
-    'uvicorn', 'fastapi', 'gradio', 'sdnq',
+    'encodings.*', # Critical fix for ModuleNotFoundError: No module named 'encodings'
+    'uvicorn', 'fastapi', 'sdnq',
     'diffusers', 'transformers', 'accelerate',
     'safetensors', 'scipy', 'numpy', 'PIL',
-    'gradio_client', 'torch', 'torchvision'
+    'torch', 'torchvision'
 ]
 hiddenimports += collect_submodules('sdnq')
 hiddenimports += collect_submodules('diffusers')
@@ -21,7 +23,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=gradio_datas + gradio_client_datas,
+    datas=custom_datas,
     hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
