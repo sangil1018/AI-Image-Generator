@@ -41,13 +41,13 @@ public class PythonServerManager : MonoBehaviour
 
     [Header("Generation Settings")]
     [Tooltip("The negative prompt to guide the image generation.")]
-    public string negative_prompt = "blurry, low quality, deformed, ugly";
+    public string negativePrompt = "blurry, low quality, deformed, ugly";
     [Tooltip("The number of inference steps.")]
     [Range(1, 50)]
     public int steps = 8;
     [Tooltip("The guidance scale, typically 0.0 for Turbo models.")]
     [Range(0f, 10f)]
-    public float guidance_scale = 0.0f;
+    public float guidanceScale = 0.0f;
     [Tooltip("The width of the generated image.")]
     public int width = 1024;
     [Tooltip("The height of the generated image.")]
@@ -371,9 +371,9 @@ public class PythonServerManager : MonoBehaviour
             lora_name = loraName,
             lora_scale = loraScale,
             prompt = prompt,
-            negative_prompt = this.negative_prompt,
+            negative_prompt = negativePrompt,
             steps = this.steps,
-            guidance_scale = this.guidance_scale,
+            guidance_scale = guidanceScale,
             width = this.width,
             height = this.height,
             seed = this.seed
