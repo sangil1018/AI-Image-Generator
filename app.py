@@ -3,7 +3,8 @@ import os
 import sys
 import uvicorn
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from typing import Optional
 import threading
@@ -22,8 +23,8 @@ else:
     # 일반 스크립트로 실행 중
     BASE_PATH = os.path.dirname(os.path.abspath(__file__))
 
-LORA_DIR = os.path.join(BASE_PATH, "lora")
-MODELS_DIR = os.path.join(BASE_PATH, "models")
+LORA_DIR = os.path.join(os.path.expanduser("~"), "AI-loras")
+MODELS_DIR = os.path.join(os.path.expanduser("~"), "AI-models")
 
 # 모델 핸들러 초기화
 try:
@@ -79,6 +80,15 @@ app = FastAPI(
     version="1.0.0"
 )
 
+# --- 정적 파일 및 루트 페이지 제공 ---
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/", response_class=FileResponse, tags=["UI"])
+async def read_root():
+    """웹 UI의 메인 페이지(index.html)를 반환합니다."""
+    return "static/index.html"
+
+
 @app.get("/api/models", tags=["정보"])
 async def get_models_api():
     """사용 가능한 모델 목록을 반환합니다."""
@@ -100,17 +110,8 @@ async def generate_image_api(request: GenerationRequest):
         lora_path = os.path.join(LORA_DIR, request.lora_name) if request.lora_name != "None" else None
         handler.load_lora(lora_path)
 
-        # 이미지 생성
-        image = handler.generate(
-            prompt=request.prompt,
-            negative_prompt=request.negative_prompt,
-            steps=request.steps,
-            guidance_scale=request.guidance_scale,
-            width=request.width,
-            height=request.height,
-            seed=request.seed,
-            lora_scale=request.lora_scale
-        )
+        # 이미지 생성 (전체 요청을 kwargs로 전달하여 유연성 확보)
+        image = handler.generate(**request.dict())
 
         if image is None:
             raise HTTPException(status_code=500, detail="모델이 이미지 생성에 실패했습니다.")

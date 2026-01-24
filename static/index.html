@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0D1117;
+            --primary-color: #58A6FF;
+            --secondary-color: #161B22;
+            --text-color: #C9D1D9;
+            --border-color: #30363D;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        .header {
+            background-color: var(--secondary-color);
+            padding: 0 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 60px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        .main-container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        .control-panel {
+            width: 350px;
+            background: var(--secondary-color);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            align-self: flex-start;
+            transition: all 0.3s ease;
+        }
+        .control-panel:hover {
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.2);
+        }
+        .control-panel h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .control-group select, .control-group textarea, .control-group input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 14px;
+            box-sizing: border-box;
+            transition: all 0.2s ease;
+        }
+        .control-group select:focus, .control-group textarea:focus, .control-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 5px rgba(88, 166, 255, 0.5);
+        }
+        .control-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        #generate-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(45deg, #007aff, #00aaff);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 122, 255, 0.2);
+        }
+        #generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 122, 255, 0.3);
+        }
+        #generate-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .image-display-area {
+            background: var(--secondary-color);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 400px;
+            position: relative;
+        }
+        #image-container {
+            width: 100%;
+            max-width: 512px;
+            aspect-ratio: 1 / 1;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+        #loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(13, 17, 23, 0.8);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            z-index: 10;
+        }
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #30363D;
+            border-top: 5px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        #result-image {
+            max-width: 100%;
+            max-height: 100%;
+            display: none;
+        }
+        .gallery-area {
+            background: var(--secondary-color);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .gallery-area h2 {
+            font-size: 20px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        #gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+            gap: 10px;
+        }
+        .gallery-item {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+        .gallery-item:hover {
+            transform: scale(1.05);
+            border-color: var(--primary-color);
+        }
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        #error-message {
+            color: #ff4d4d;
+            font-weight: bold;
+            display: none;
+            margin-top: 10px;
+        }
+        #image-info-container {
+            display: none; 
+            margin-top: 20px; 
+            text-align: left; 
+            width: 100%; 
+            max-width: 512px;
+            background: var(--bg-color);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>AI Image Generator</h1>
+    </div>
+    <div class="main-container">
+        <div class="control-panel">
+            <h2>Generation Settings</h2>
+            <div class="control-group">
+                <label for="model-select">Model</label>
+                <select id="model-select"></select>
+            </div>
+            <div class="control-group">
+                <label for="lora-select">LoRA</label>
+                <select id="lora-select"></select>
+            </div>
+            <div class="control-group">
+                <label for="lora-scale">LoRA Scale: <span id="lora-scale-value">0.7</span></label>
+                <input type="range" id="lora-scale" min="0" max="2" step="0.1" value="0.7">
+            </div>
+            <div class="control-group">
+                <label for="resolution-select">Resolution</label>
+                <select id="resolution-select">
+                    <option value="1328x1328">1:1 (1328x1328)</option>
+                    <option value="1664x928" selected>16:9 (1664x928)</option>
+                    <option value="928x1664">9:16 (928x1664)</option>
+                    <option value="1472x1104">4:3 (1472x1104)</option>
+                    <option value="1104x1472">3:4 (1104x1472)</option>
+                    <option value="1584x1056">3:2 (1584x1056)</option>
+                    <option value="1056x1584">2:3 (1056x1584)</option>
+                </select>
+            </div>
+                        <div class="control-group">
+                            <label for="prompt">Prompt</label>
+                            <textarea id="prompt" placeholder="e.g., a cute cat wearing a wizard hat"></textarea>
+                        </div>
+                        <div class="control-group">
+                            <label for="seed">Seed</label>
+                            <input type="number" id="seed" value="42">
+                        </div>
+                        <div class="control-group">
+                            <label for="steps">Steps: <span id="steps-value">8</span></label>
+                            <input type="range" id="steps" min="1" max="50" value="8">
+                        </div>
+                        <div class="control-group">
+                            <label for="guidance-scale">Guidance Scale: <span id="guidance-scale-value">0</span></label>
+                            <input type="range" id="guidance-scale" min="0" max="20" step="0.1" value="0">
+                        </div>
+                        <button id="generate-btn">Generate Image</button>
+                        <p id="error-message"></p>
+                    </div>
+                    <div class="content-area">
+                        <div class="image-display-area">
+                            <div id="image-container">
+                                <div id="loading-overlay">
+                                    <div class="spinner"></div>
+                                    <p>Generating...</p>
+                                    <div id="progress-bar-container" style="width: 80%; background-color: #ddd; border-radius: 5px;">
+                                        <div id="progress-bar" style="width: 0%; height: 10px; background-color: #007aff; border-radius: 5px;"></div>
+                                    </div>
+                                </div>
+                                <img id="result-image" alt="Generated Image">
+                            </div>
+                            <div id="image-info-container" style="display: none; margin-top: 20px; text-align: left; width: 100%; max-width: 512px;">
+                                <h3>Generation Info</h3>
+                                <p id="image-info-prompt"></p>
+                                <p id="image-info-seed"></p>
+                                <p id="image-info-steps"></p>
+                                <p id="image-info-guidance"></p>
+                            </div>
+                        </div>
+            <div class="gallery-area">
+                <h2>History</h2>
+                <div id="gallery-grid"></div>
+            </div>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

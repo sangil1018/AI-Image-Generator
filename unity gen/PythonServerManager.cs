@@ -24,6 +24,8 @@ public class PythonServerManager : MonoBehaviour
     [Header("UI References")]
     [Tooltip("The Dropdown for model selection")]
     public TMP_Dropdown modelDropdown;
+    [Tooltip("A parent GameObject holding all LoRA-related controls.")]
+    public GameObject loraControlsContainer;
     [Tooltip("The Dropdown for LoRA selection")]
     public TMP_Dropdown loraDropdown;
     [Tooltip("The Slider for controlling LoRA weight")]
@@ -45,7 +47,7 @@ public class PythonServerManager : MonoBehaviour
     [Tooltip("The number of inference steps.")]
     [Range(1, 50)]
     public int steps = 8;
-    [Tooltip("The guidance scale, typically 0.0 for Turbo models.")]
+    [Tooltip("Guidance scale (CFG). Ignored by FLUX models. For SD-Turbo models, 0.0 is recommended. For other models like Qwen, requires a negative prompt to be effective.")]
     [Range(0f, 10f)]
     public float guidanceScale = 0.0f;
     [Tooltip("The width of the generated image.")]

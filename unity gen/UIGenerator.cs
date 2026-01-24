@@ -62,8 +62,14 @@ public class UIGenerator
         CreateTitle(controlPanel.transform, "Control Panel");
 
         var modelDropdown = CreateDropdown(controlPanel.transform, "Model", "Select Model (e.g., Z-Image-Turbo)");
-        var loraDropdown = CreateDropdown(controlPanel.transform, "LoRA", "Select LoRA (e.g., None)");
-        var (loraSlider, loraValueText) = CreateSlider(controlPanel.transform, "LoRA Scale", 0.5f, 0.8f, 0.7f);
+
+        // --- LoRA Controls Container ---
+        GameObject loraControlsContainer = CreateUIObject("LoraControls", controlPanel.transform);
+        loraControlsContainer.AddComponent<VerticalLayoutGroup>().spacing = elementSpacing;
+        
+        var loraDropdown = CreateDropdown(loraControlsContainer.transform, "LoRA", "Select LoRA (e.g., None)");
+        var (loraSlider, loraValueText) = CreateSlider(loraControlsContainer.transform, "LoRA Scale", 0.5f, 0.8f, 0.7f);
+        
         var promptInput = CreateInputField(controlPanel.transform, "Prompt", "Enter prompt here...");
 
         GameObject buttonContainer = CreateUIObject("ButtonContainer", controlPanel.transform);
@@ -87,6 +93,7 @@ public class UIGenerator
         if (manager != null)
         {
             manager.modelDropdown = modelDropdown;
+            manager.loraControlsContainer = loraControlsContainer; // Assign the new container
             manager.loraDropdown = loraDropdown;
             manager.loraScaleSlider = loraSlider;
             manager.loraScaleValueText = loraValueText;

@@ -1,0 +1,20 @@
+version: '3.8'
+services:
+  ai-image-generator:
+    build: .
+    ports:
+      - "8888:8888"
+    environment:
+      - MODELS_DIR=/models
+      - LORA_DIR=/loras
+    volumes:
+      - C:\AI\models:/root/AI-models
+      - C:\AI\loras:/root/AI-loras
+      - ./static:/app/static
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

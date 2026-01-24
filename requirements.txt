@@ -6,7 +6,8 @@
 # accelerate
 
 # Core AI & Diffusers
-git+https://github.com/huggingface/diffusers
+diffusers==0.28.0
+huggingface-hub==0.23.0
 transformers
 safetensors
 peft
@@ -20,6 +21,8 @@ uvicorn
 scipy
 numpy
 Pillow
+protobuf
+sentencepiece
 
 # Build Tools
 pyinstaller

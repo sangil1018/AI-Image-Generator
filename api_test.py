@@ -49,6 +49,35 @@ def prompt_for_selection(item_list, title):
         except ValueError:
             print("잘못된 입력입니다. 숫자를 입력하세요.")
 
+def get_model_type(model_name):
+    """모델 이름에서 아키텍처 타입을 식별합니다."""
+    model_name_lower = model_name.lower()
+    if 'flux' in model_name_lower:
+        return 'flux'
+    elif 'qwen' in model_name_lower:
+        return 'qwen'
+    return 'sd' # 기본값
+
+def get_prompt_and_guidance(model_type):
+    """모델 타입에 맞는 기본 프롬프트와 작성 가이드를 반환합니다."""
+    if model_type == 'flux':
+        print("\n--- FLUX 모델 프롬프트 가이드 ---")
+        print("FLUX 모델은 일반적인 SD 모델과 달리, 복잡하고 서술적인 문장을 잘 이해합니다.")
+        print("단순한 키워드 나열보다 완전한 문장으로 묘사하는 것이 좋습니다.")
+        print("Negative Prompt와 LoRA는 사용되지 않습니다.")
+        return "A cinematic shot of a an old man sitting on a mountainside, daytime, breathtaking, 8k"
+    elif model_type == 'qwen':
+        print("\n--- Qwen-Image 모델 프롬프트 가이드 ---")
+        print("Qwen 모델은 지시사항(Instruction) 형식의 프롬프트를 사용합니다.")
+        print("만들고 싶은 이미지를 명확하고 구체적으로 서술하세요. 중국어/영어를 잘 이해합니다.")
+        print("Negative Prompt와 LoRA는 사용되지 않습니다.")
+        return "A wolf howling at the moon in a dark forest, highly detailed, photorealistic."
+    else: # sd
+        print("\n--- Stable Diffusion 모델 프롬프트 가이드 ---")
+        print("키워드 기반 프롬프트에 가장 잘 반응합니다. 쉼표(,)로 키워드를 구분하여 퀄리티, 스타일, 피사체, 배경 등을 묘사하세요.")
+        print("Negative Prompt와 LoRA 사용이 가능합니다.")
+        return "a korean girl, solo, whole body with long boots, dynamic pose, beautiful detailed eyes, cinematic lighting, masterpiece, ultra-detailed, 8k"
+
 def run_generation_test():
     """
     사용자 선택에 기반하여 이미지 생성을 테스트하는 전체 프로세스를 실행합니다.
@@ -60,78 +89,63 @@ def run_generation_test():
         return
     
     selected_model = prompt_for_selection(models, "모델 선택")
-    print(f"   > 선택된 모델: {selected_model}")
+    model_type = get_model_type(selected_model)
+    print(f"   > 선택된 모델: {selected_model} (타입: {model_type.upper()})")
 
-    # 2. LoRA 선택
-    loras = get_all_loras()
-    selected_lora = "사용 안함"
-    lora_scale = 0.8 # 기본값
-
-    if loras:
-        lora_options = ["사용 안함"] + loras
-        selected_lora = prompt_for_selection(lora_options, "LoRA 선택")
-    else:
-        print("\n사용 가능한 LoRA가 없습니다.")
-
-    if selected_lora == "사용 안함":
-        print("   > LoRA를 사용하지 않습니다.")
-        lora_name = "None"
-    else:
-        print(f"   > 선택된 LoRA: {selected_lora}")
-        lora_name = selected_lora
-        # LoRA 스케일 입력 받기
-        while True:
-            try:
-                scale_input = input(f"   > LoRA 스케일 값을 입력하세요 (0.0 ~ 1.0, 기본값: {lora_scale}): ").strip()
-                if not scale_input:
-                    break # 기본값 사용
-                lora_scale = float(scale_input)
-                if 0.0 <= lora_scale <= 2.0: # 스케일 범위는 조금 넉넉하게
-                    break
-                else:
-                    print("   > 잘못된 범위입니다. 0.0에서 2.0 사이의 값을 입력하세요.")
-            except ValueError:
-                print("   > 잘못된 입력입니다. 숫자를 입력하세요.")
-    
-    # 3. 페이로드 정의
-    base_prompt = "a korean girl, solo, whole body with long boots, dynamic pose, beautiful detailed eyes, cinematic lighting, masterpiece, ultra-detailed, 8k, photorealistic, golden hour lighting"
-    lora_trigger_word = ""
-
-    if lora_name != "None":
-        trigger_input = input(f"   > '{lora_name.replace('.safetensors', '')}' LoRA의 트리거 워드를 입력하세요 (선택 사항): ").strip()
-        if trigger_input:
-            lora_trigger_word = trigger_input
-            print(f"   > LoRA 트리거 워드: {lora_trigger_word}")
-        else:
-            print("   > LoRA 트리거 워드를 입력하지 않았습니다.")
-
-    # 최종 프롬프트 구성
-    final_prompt = base_prompt
-    if lora_trigger_word:
-        final_prompt += f", {lora_trigger_word}"
+    # 2. 프롬프트 및 파라미터 입력
+    base_prompt = get_prompt_and_guidance(model_type)
+    prompt_input = input(f"   > 프롬프트를 입력하세요 (기본값: '{base_prompt}'): ").strip()
+    final_prompt = prompt_input if prompt_input else base_prompt
 
     payload = {
         "model_name": selected_model,
-        "lora_name": lora_name,
-        "lora_scale": lora_scale,
-        "prompt": final_prompt, # 최종 프롬프트를 사용
-        "negative_prompt": "blurry, low quality, deformed, ugly, worst quality, low quality, normal quality",
-        "steps": 8,
+        "prompt": final_prompt,
         "width": 1024,
         "height": 1024,
+        "steps": 8,
         "seed": -1
     }
+
+    # 3. 모델 타입별 파라미터 추가
+    if model_type == 'sd':
+        neg_prompt = input("   > Negative 프롬프트를 입력하세요 (기본값: 'blurry, low quality, deformed, ugly'): ").strip()
+        payload['negative_prompt'] = neg_prompt if neg_prompt else "blurry, low quality, deformed, ugly"
+        payload['guidance_scale'] = 0.0 # Turbo 모델 기본값
+        
+        # LoRA 선택
+        loras = get_all_loras()
+        if loras:
+            lora_options = ["사용 안함"] + loras
+            selected_lora = prompt_for_selection(lora_options, "LoRA 선택 (SD 모델 전용)")
+            if selected_lora != "사용 안함":
+                payload['lora_name'] = selected_lora
+                
+                lora_scale = 0.8
+                scale_input = input(f"   > LoRA 스케일 값을 입력하세요 (기본값: {lora_scale}): ").strip()
+                try:
+                    payload['lora_scale'] = float(scale_input) if scale_input else lora_scale
+                except ValueError:
+                    payload['lora_scale'] = lora_scale
+
+                trigger_input = input(f"   > '{selected_lora.replace('.safetensors', '')}' LoRA의 트리거 워드를 입력하세요 (선택 사항): ").strip()
+                if trigger_input:
+                    payload['prompt'] += f", {trigger_input}"
+        else:
+            print("\n사용 가능한 LoRA가 없습니다.")
     
     print("\n--- 이미지 생성 요청 ---")
-    print(f"Payload: {payload}")
+    print("Payload:", json.dumps(payload, indent=2, ensure_ascii=False))
     
     try:
         # 4. POST 요청 보내기
-        response = requests.post(f"{BASE_URL}/api/generate", json=payload, timeout=120)
+        response = requests.post(f"{BASE_URL}/api/generate", json=payload, timeout=300) # 타임아웃 증가
         response.raise_for_status()
 
         # 5. 반환된 이미지 데이터 저장
-        output_filename = f"output_{selected_model.replace('/', '_')}_{lora_name.replace('.safetensors', '')}.png"
+        model_name_safe = selected_model.replace('/', '_').replace('\\', '_')
+        lora_name_safe = payload.get('lora_name', 'None').replace('.safetensors', '')
+        output_filename = f"output_{model_name_safe}_{lora_name_safe}.png"
+
         with open(output_filename, "wb") as f:
             f.write(response.content)
         
@@ -141,12 +155,13 @@ def run_generation_test():
     except requests.exceptions.RequestException as e:
         print(f"\n--- API 호출 중 오류가 발생했습니다 ---")
         print(e)
-        if e.response:
+        if hasattr(e, 'response') and e.response:
             print(f"서버 응답: {e.response.text}")
 
     print("\n--- 테스트 종료 ---")
 
 if __name__ == "__main__":
+    import json
     # 이 스크립트를 실행하기 전에 메인 서버가 실행 중인지 확인하세요:
     # python app.py
     run_generation_test()
