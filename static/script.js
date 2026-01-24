@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const status = document.getElementById('status');
     const loadingOverlay = document.getElementById('loading-overlay');
     const errorMessage = document.getElementById('error-message');
+    const galleryGrid = document.getElementById('gallery-grid');
+    const resolutionSelect = document.getElementById('resolution-select');
     const imageInfoContainer = document.getElementById('image-info-container');
     const imageInfoPrompt = document.getElementById('image-info-prompt');
     const imageInfoSeed = document.getElementById('image-info-seed');
@@ -21,6 +23,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const guidanceScaleSlider = document.getElementById('guidance-scale');
     const guidanceScaleValue = document.getElementById('guidance-scale-value');
     const seedInput = document.getElementById('seed');
+    const randomizeSeedBtn = document.getElementById('randomize-seed');
+    const downloadBtn = document.getElementById('download-btn');
+    const toggleBtn = document.querySelector('.toggle-btn');
+    const controlPanel = document.querySelector('.control-panel');
 
     // 모델 및 LoRA 목록 로드 함수
     async function initialize() {
@@ -58,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
         generateBtn.disabled = true;
         status.textContent = 'Generating... this may take a moment.';
         resultImage.style.display = 'none';
+        downloadBtn.style.display = 'none';
         imageInfoContainer.style.display = 'none';
         loadingOverlay.style.display = 'flex'; // 로딩 오버레이 표시
 
@@ -80,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             let progress = 0;
             const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = '0%';
             const interval = setInterval(() => {
                 progress += 1;
                 progressBar.style.width = `${progress}%`;
@@ -125,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             resultImage.src = imageUrl;
             resultImage.style.display = 'block';
+            downloadBtn.style.display = 'block';
             status.textContent = 'Generation complete.';
             
             addOrUpdateGalleryItem(imageUrl, payload);
@@ -147,21 +156,31 @@ document.addEventListener('DOMContentLoaded', () => {
         img.src = imageUrl;
         galleryItem.appendChild(img);
 
-        galleryItem.addEventListener('click', () => {
-            resultImage.src = imageUrl;
-            resultImage.style.display = 'block';
-            imageInfoPrompt.textContent = `Prompt: ${params.prompt}`;
-            imageInfoSeed.textContent = `Seed: ${params.seed}`;
-            imageInfoSteps.textContent = `Steps: ${params.steps}`;
-            imageInfoGuidance.textContent = `Guidance Scale: ${params.guidance_scale}`;
-            imageInfoContainer.style.display = 'block';
+        const downloadIcon = document.createElement('a');
+        downloadIcon.href = imageUrl;
+        downloadIcon.download = `generated_image_${Date.now()}.png`;
+        downloadIcon.className = 'download-btn';
+        downloadIcon.innerHTML = '<i class="fas fa-download"></i>';
+        galleryItem.appendChild(downloadIcon);
+
+        galleryItem.addEventListener('click', (e) => {
+            if (e.target.tagName !== 'I' && e.target.tagName !== 'A') {
+                resultImage.src = imageUrl;
+                resultImage.style.display = 'block';
+                downloadBtn.style.display = 'block';
+                imageInfoPrompt.textContent = `Prompt: ${params.prompt}`;
+                imageInfoSeed.textContent = `Seed: ${params.seed}`;
+                imageInfoSteps.textContent = `Steps: ${params.steps}`;
+                imageInfoGuidance.textContent = `Guidance Scale: ${params.guidance_scale}`;
+                imageInfoContainer.style.display = 'block';
+            }
         });
 
         // Add to the beginning of the grid
         galleryGrid.insertBefore(galleryItem, galleryGrid.firstChild);
     }
 
-    // LoRA 스케일 슬라이더 값 표시 업데이트
+    // Event Listeners
     loraScaleSlider.addEventListener('input', () => {
         loraScaleValue.textContent = loraScaleSlider.value;
     });
@@ -174,7 +193,23 @@ document.addEventListener('DOMContentLoaded', () => {
         guidanceScaleValue.textContent = guidanceScaleSlider.value;
     });
 
-    // 생성 버튼에 이벤트 리스너 추가
+    randomizeSeedBtn.addEventListener('click', () => {
+        seedInput.value = Math.floor(Math.random() * 1000000);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+        const link = document.createElement('a');
+        link.href = resultImage.src;
+        link.download = `generated_image_${Date.now()}.png`;
+        link.click();
+    });
+
+    toggleBtn.addEventListener('click', () => {
+        controlPanel.classList.toggle('collapsed');
+        toggleBtn.querySelector('i').classList.toggle('fa-chevron-left');
+        toggleBtn.querySelector('i').classList.toggle('fa-chevron-right');
+    });
+
     generateBtn.addEventListener('click', generateImage);
 
     // 초기화 함수 실행
